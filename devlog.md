@@ -9,3 +9,6 @@ Create customer threads and confirm they accept eachother before next step. Bank
 provide communication between the threads & will merge the threads to 1 file.
 Finished basic needs for customer logic, will continue next session
 # 11 6 12:08pm end session
+
+# 11 7 10:30
+Doing some revising to match output text

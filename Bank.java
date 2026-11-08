@@ -6,13 +6,14 @@ import java.util.Random;
 public class Bank {
     static public Semaphore door = new Semaphore(2); // Allow 2 customers in the bank at a time
     static BlockingQueue<CustomerRequest> line = new LinkedBlockingQueue<>();
-    
+    static Semaphore tellerReady = new Semaphore(0); 
     
 
     static public class CustomerRequest {
         int customerId;
         String transactionType;
         boolean shutdown = false;
+        volatile int tellerId = -1; // Teller ID assigned to the customer
 
         Semaphore goingBank = new Semaphore(0); //customer going to bank
         Semaphore enterBank = new Semaphore(0); //signals customer can approach teller
@@ -20,7 +21,8 @@ public class Bank {
         Semaphore introduced = new Semaphore(0); // customer signals they've introduced themselves
         Semaphore selectingTeller = new Semaphore(0); // customer signals they've asked their question
         Semaphore asked = new Semaphore(0); // customer signals they've asked their question
-        
+        Semaphore completed = new Semaphore(0);
+        Semaphore customerLeft = new Semaphore(0);
 
         CustomerRequest(int id, String transactionType) {
             this.customerId = id;
@@ -44,26 +46,29 @@ public class Bank {
         }
 
         public void run() {
+            System.out.println("Customer []:" + id + " wants to perform a "+ transactionType + " transaction");
             try {
                 door.acquire(); // Wait to enter the bank
-                System.out.println("Customer []:" + id + " wants to perform a "+ transactionType + " transaction");
+                
+                Thread.sleep(100); // Simulate time taken to perform transaction
                 CustomerRequest request = new CustomerRequest(id, transactionType);
+
                 //bank
                 request.goingBank.release(); 
-                request.enterBank.acquire(); 
+                request.enterBank.acquire();
                 System.out.println("Customer []:" + id + " going to bank.");
                 request.enterBank.release();
                 request.enterBank.acquire();
                 System.out.println("Customer []:" + id + "entering bank.");
                 //line
                 request.getInLine.release(); 
-                line.put(request); 
                 request.getInLine.acquire(); 
+                line.put(request); 
                 System.out.println("Customer []:" + id + " getting in line.");
                 //teller
-                request.selectingTeller.release(); 
-                request.selectingTeller.acquire();
-                System.out.println("Customer []:" + id + " selecting a teller.");
+                request.selectingTeller.release();
+                request.selectingTeller.acquire();                
+                //System.out.println("Customer [Teller + " + Teller.id + " ]:" + id + " selecting a teller.");
 
                 //teller selects self and signals customer to introduce themselves
                 
@@ -80,17 +85,28 @@ public class Bank {
 
     static class Teller extends Thread {
     int id;
+    Semaphore safe = new Semaphore(2); // Lock for safe
+    Semaphore manager = new Semaphore(1); // Lock for manager
 
     Teller(int id) {
         this.id = id;
     }
-
+    
     public void run() {
-        try {
-            System.out.println("Teller []:" + id + " []: ready to serve");
-            // Teller logic 
-        } catch (Exception e) {
-            System.err.println("Error in Teller []:" + id + ": " + e);
+        
+            System.out.println("Teller []:" + id + " ready to serve");
+            System.out.println("Teller []:" + id + " waiting for a customer");
+            tellerReady.release(); // Signal that teller is ready to serve
+
+            while(true){
+                try {
+                    CustomerRequest request = line.take(); // Wait for a customer to enter the line
+                    //System.out.println("Teller []:" + id + " serving Customer []:" + request.customerId);
+
+                } catch (Exception e) {
+                System.err.println("Error in Teller []:" + id + ": " + e);
+
+            }
         }
     }
 }
@@ -106,26 +122,23 @@ static public void main(String[] args)
 
     for(int i = 0; i < tellerCount; i++)
     {
-        tellers[i] = new Teller(i);
-        tellers[i].start();
+        Teller teller = new Teller(i);
+        teller.start();
         try {
-                //waits till the thread is done before continuing
-                tellers[i].join();
-            } catch (InterruptedException e) {
-                System.err.println("Error joining thread []:" + i + ": " + e);
-            }
+            // Wait for the teller to signal that they are ready
+            tellerReady.acquire();
+        } catch (InterruptedException e) {
+            System.err.println("Error waiting for teller " + i + " to be ready: " + e);
+        }
+    
+        
     }
     for(int i = 0; i < customerCount; i++)
     {
-
-        customers[i] = new Customer(i, transactionType);
-        customers[i].start();
-        try {
-                //waits till the thread is done before continuing
-                customers[i].join();
-            } catch (InterruptedException e) {
-                System.err.println("Error joining thread []:" + i + ": " + e);
-            }   
+        Customer customer = new Customer(i, transactionType);
+        customer.start();
+    
+        
     }
 }
 }
