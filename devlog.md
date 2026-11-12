@@ -12,3 +12,9 @@ Finished basic needs for customer logic, will continue next session
 
 # 11 7 10:30
 Doing some revising to match output text
+
+# 11 12 3 pm 
+going to fix the sequence the customer enters currently having problems with customers entering out of order.
+fixed, will work on beginning interactions. 
+Got the customer and teller to print beginning statements and entering bank and line statements.
+# 11 12 4pm end session
