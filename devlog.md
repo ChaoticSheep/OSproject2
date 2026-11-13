@@ -18,3 +18,12 @@ going to fix the sequence the customer enters currently having problems with cus
 fixed, will work on beginning interactions. 
 Got the customer and teller to print beginning statements and entering bank and line statements.
 # 11 12 4pm end session
+
+# 11 13 8:30 am
+Continuing to work on customer and teller intraction. primarily processing the custoers request.
+I get the customers to get in line but the tellers arn't working.
+I had the bank door aquiring and releasing incorreectly and had the teller & customer arrays wrong.
+I moved the manager to the overall bank class instead keeping it within the teller class.
+Evrything seems to be printing correctly and terminating at the end appropriately.
+
+# 11 13 9:30 am end session
