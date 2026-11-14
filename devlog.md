@@ -25,5 +25,8 @@ I get the customers to get in line but the tellers arn't working.
 I had the bank door aquiring and releasing incorreectly and had the teller & customer arrays wrong.
 I moved the manager to the overall bank class instead keeping it within the teller class.
 Evrything seems to be printing correctly and terminating at the end appropriately.
-
 # 11 13 9:30 am end session
+
+# 11 14 10:50 am 
+Checking if output matches sampleoutput. 2 teller prints are not there, will add in. Added safe interaction for deposit option and corresponding prints. Removing unneccessary files from git.
+# 11 14 11:20 am end session

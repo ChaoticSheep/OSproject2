@@ -67,7 +67,7 @@ public class Bank {
                     System.out.println("Customer " + id + " [Teller "+ request.tellerId + " ]: selects teller");
                     
                     //introduces
-                    System.out.println("Customer " + id + " [Teller "+ request.tellerId + " ]: introduces themselves");
+                    System.out.println("Customer " + id + " [Teller "+ request.tellerId + " ]: introduces itself");
                     request.introduced.release(); // Signal that customer has introduced themselves
                     request.transactionRequested.acquire(); // Wait for teller to ask their question
                     System.out.println("Customer " + id + " [Teller "+ request.tellerId + " ]: asks for " + transactionType + " transaction");
@@ -109,12 +109,14 @@ public class Bank {
                     request.tellerId = id; // Assign teller ID to the customer request
                     request.tellerAssigned.release(); // Signal that teller has been assigned to the customer
                     request.introduced.acquire(); // Wait for customer to introduce themselves
+                    System.out.println("Teller " + id + " [Customer " + request.customerId + "]: serving a customer");
                     System.out.println("Teller " + id + " [Customer " + request.customerId + "]: asks for transaction");
                     request.transactionRequested.release(); // Signal that teller has asked for transaction
                     request.transactionProvided.acquire(); // Wait for customer to provide transaction request
 
                     //manager permission
                     if(request.transactionType.equals("withdrawal")) {
+                        System.out.println("Teller " + id + " [Customer " + request.customerId + "]: handling withdrawal transaction");
                         System.out.println("Teller " + id + " [Customer " + request.customerId + "]: going to manager");
                         Bank.manager.acquire(); // Acquire manager permission for withdrawal
                         try {
@@ -131,11 +133,13 @@ public class Bank {
                         try {
                             System.out.println("Teller " + id + " [Customer " + request.customerId + "]: going to safe");
                             int safeDelay = ThreadLocalRandom.current().nextInt(5, 31); // Random delay between 1 and 5 seconds
+                            System.out.println("Teller " + id + " [Customer " + request.customerId + "]: enter safe");
                             Thread.sleep(safeDelay); // Simulate time taken by safe
+                            System.out.println("Teller " + id + " [Customer " + request.customerId + "]: leaving safe");
                         } finally {
                             Bank.safe.release(); // Release safe permission
                         }
-                        System.out.println("Teller " + id + " [Customer " + request.customerId + "]: transaction complete");
+                        System.out.println("Teller " + id + " [Customer " + request.customerId + "]: finishes withdrawal transaction.");
                         
                         
                     }
@@ -144,11 +148,20 @@ public class Bank {
 
                         int depositDelay = ThreadLocalRandom.current().nextInt(5, 31);
                         Thread.sleep(depositDelay);
-
+                        Bank.safe.acquire(); // Acquire safe permission for deposit
+                        try {
+                            System.out.println("Teller " + id + " [Customer " + request.customerId + "]: going to safe");
+                            int safeDelay = ThreadLocalRandom.current().nextInt(5, 31); // Random delay between 1 and 5 seconds
+                            System.out.println("Teller " + id + " [Customer " + request.customerId + "]: enter safe");
+                            Thread.sleep(safeDelay); // Simulate time taken by safe
+                            System.out.println("Teller " + id + " [Customer " + request.customerId + "]: leaving safe");
+                        } finally {
+                            Bank.safe.release(); // Release safe permission
+                        }
                         System.out.println("Teller " + id + " [Customer " + request.customerId + "]: finishes deposit transaction.");
                     }
                     request.transactionComplete.release(); // Signal that transaction is complete
-                    System.out.println("Teller " + id + "[]: waiting for customer");
+                    System.out.println("Teller " + id + " [" + request.customerId + "]: wait for customer to leave");
                     request.customerLeft.acquire(); // Wait for customer to leave
                     
 
